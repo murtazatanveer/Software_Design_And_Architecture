@@ -133,12 +133,13 @@ public class FrequencyDistributionTable extends javax.swing.JFrame {
                    
                 }
                              
-                lower = upper;
+                
                 double midPoint = (lower + upper)/2;
                 double relativeFreq = (double)count/rawData.size();
                 totalCf+=(prev+count);               
                 result += String.format("\t%s   \t%d       %.2f   \t%d   \t%.2f\n\n", interval, count, (midPoint),(prev+count),(relativeFreq));
-                prev=count;
+                prev=prev+count;
+                lower = upper;
             }
 
          
