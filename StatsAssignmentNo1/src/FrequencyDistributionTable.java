@@ -104,37 +104,47 @@ public class FrequencyDistributionTable extends javax.swing.JFrame {
                 }
             }
 
+
             Collections.sort(rawData);
 
             int k = (int) Math.ceil(1 + 3.322 * Math.log10(rawData.size()));
             double range = rawData.get(rawData.size()-1) - rawData.get(0);
             double width = range/k;
     
-            List<String> intervals = new ArrayList<>();
-            List<Integer> frequencies = new ArrayList<>();
-            List<Double> midPoint = new ArrayList<>();
-    
-            String result = "\t\tClass Interval\tFrequency\tMid Point\n";
+            int prev=0; 
+            int totalCf=0;
+            String result = "\tClass Interval\t   Frequency\tMid Point\tCF\tRF\n\n";
     
             double lower = rawData.get(0);
+
             for (int i = 0; i < k; i++) {
                 double upper = lower + width;
-                intervals.add(String.format("%.2f -- %.2f", lower, upper));
-                midPoint.add((lower+upper)/2);
+                if (i==(k-1)) {
+                    upper++;
+                }
+                String interval = String.format("%.2f -- %.2f", lower, upper);
+    
                 int count = 0;
                 for (double value : rawData) {
                     
-                    if (value >= lower && value < upper) {
-                        count++;
+                    if (value >= lower && value < upper ) {
+                        count++;                       
                     }
+                   
                 }
-                frequencies.add(count);
+                             
                 lower = upper;
-                
-                result += String.format("\t\t%-15s\t%-10d\t%.1f%n", intervals.get(i), frequencies.get(i), midPoint.get(i));
+                double midPoint = (lower + upper)/2;
+                double relativeFreq = (double)count/rawData.size();
+                totalCf+=(prev+count);               
+                result += String.format("\t%s   \t%d       %.2f   \t%d   \t%.2f\n\n", interval, count, (midPoint),(prev+count),(relativeFreq));
+                prev=count;
             }
 
+         
+            result+="\t______________________________________________________________\n\t  Total\t\t\t"+rawData.size()+"\t\t\t"+totalCf;
             output.setText(result);
+
     }                                           
 
     /**
@@ -170,8 +180,8 @@ public class FrequencyDistributionTable extends javax.swing.JFrame {
                 new FrequencyDistributionTable().setVisible(true);
             }
         });
-    }
-
+        }
+        
     // Variables declaration - do not modify                     
     private javax.swing.JTextField input;
     private javax.swing.JLabel jLabel1;
