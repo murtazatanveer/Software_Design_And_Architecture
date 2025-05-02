@@ -2,6 +2,7 @@ package SoftPrinciples.Controller.withController;
 
 class stack{
 
+  
     private int []arr;
  
     private int top=-1;
