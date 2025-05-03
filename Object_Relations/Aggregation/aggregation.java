@@ -19,6 +19,8 @@ class course{
 
 class student{ // one to many relationship between course and student.
 
+
+
     String name;
     String regno;
     int sem;
