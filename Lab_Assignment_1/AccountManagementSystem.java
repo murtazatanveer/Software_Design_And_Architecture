@@ -5,9 +5,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
 import javax.swing.*;
+import java.nio.file.Paths;
 
 public class AccountManagementSystem extends JFrame {
-    private static final String DATA_FILE = "users.txt";
+    private static final String DATA_FILE = Paths.get("Lab_Assignment_1", "users.txt").toString();
     private JTabbedPane tabbedPane;
     private JPanel registerPanel, updatePanel, deletePanel, rolePanel;
     private JTextField regNameField, regEmailField, updateIdField, updateNameField, updateEmailField, deleteIdField, roleIdField;
