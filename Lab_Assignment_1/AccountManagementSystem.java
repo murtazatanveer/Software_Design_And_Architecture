@@ -1,11 +1,13 @@
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringJoiner;
+import javax.swing.*;
 
 public class AccountManagementSystem extends JFrame {
+    private static final String DATA_FILE = "users.txt";
     private JTabbedPane tabbedPane;
     private JPanel registerPanel, updatePanel, deletePanel, rolePanel;
     private JTextField regNameField, regEmailField, updateIdField, updateNameField, updateEmailField, deleteIdField, roleIdField;
@@ -19,12 +21,17 @@ public class AccountManagementSystem extends JFrame {
         setSize(600, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
+        
+
+        loadUserData();
 
         tabbedPane = new JTabbedPane();
-        createRegisterPanel();
-        createUpdatePanel();
-        createDeletePanel();
-        createRolePanel();
+        
+        // Initialize all panels
+        registerPanel = createRegisterPanel();
+        updatePanel = createUpdatePanel();
+        deletePanel = createDeletePanel();
+        rolePanel = createRolePanel();
 
         tabbedPane.addTab("Register", registerPanel);
         tabbedPane.addTab("Update", updatePanel);
@@ -32,10 +39,17 @@ public class AccountManagementSystem extends JFrame {
         tabbedPane.addTab("Assign Role", rolePanel);
 
         add(tabbedPane, BorderLayout.CENTER);
+        
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                saveUserData();
+            }
+        });
     }
 
-    private void createRegisterPanel() {
-        registerPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+    private JPanel createRegisterPanel() {
+        JPanel panel = new JPanel(new GridLayout(5, 2, 10, 10));
         regNameField = new JTextField();
         regEmailField = new JTextField();
         regPasswordField = new JPasswordField();
@@ -43,118 +57,143 @@ public class AccountManagementSystem extends JFrame {
         regRoleCombo = new JComboBox<>(roles);
         regSubmitBtn = new JButton("Register");
 
-        registerPanel.add(new JLabel("Name:"));
-        registerPanel.add(regNameField);
-        registerPanel.add(new JLabel("Email:"));
-        registerPanel.add(regEmailField);
-        registerPanel.add(new JLabel("Password:"));
-        registerPanel.add(regPasswordField);
-        registerPanel.add(new JLabel("Role:"));
-        registerPanel.add(regRoleCombo);
-        registerPanel.add(new JLabel());
-        registerPanel.add(regSubmitBtn);
+        panel.add(new JLabel("Name:"));
+        panel.add(regNameField);
+        panel.add(new JLabel("Email:"));
+        panel.add(regEmailField);
+        panel.add(new JLabel("Password:"));
+        panel.add(regPasswordField);
+        panel.add(new JLabel("Role:"));
+        panel.add(regRoleCombo);
+        panel.add(new JLabel());
+        panel.add(regSubmitBtn);
 
-        regSubmitBtn.addActionListener(e -> {
-            String name = regNameField.getText();
-            String email = regEmailField.getText();
-            String password = new String(regPasswordField.getPassword());
-            String role = (String) regRoleCombo.getSelectedItem();
-            
-            if (!users.containsKey(email)) {
-                users.put(email, new User(name, email, password, role));
-                JOptionPane.showMessageDialog(this, "User registered successfully");
-                clearRegisterFields();
-            } else {
-                JOptionPane.showMessageDialog(this, "Email already exists");
-            }
-        });
+        regSubmitBtn.addActionListener(e -> registerUser());
+        
+        return panel;
     }
 
-    private void createUpdatePanel() {
-        updatePanel = new JPanel(new GridLayout(5, 2, 10, 10));
+    private JPanel createUpdatePanel() {
+        JPanel panel = new JPanel(new GridLayout(5, 2, 10, 10));
         updateIdField = new JTextField();
         updateNameField = new JTextField();
         updateEmailField = new JTextField();
         updateSubmitBtn = new JButton("Update");
 
-        updatePanel.add(new JLabel("User Email:"));
-        updatePanel.add(updateIdField);
-        updatePanel.add(new JLabel("New Name:"));
-        updatePanel.add(updateNameField);
-        updatePanel.add(new JLabel("New Email:"));
-        updatePanel.add(updateEmailField);
-        updatePanel.add(new JLabel());
-        updatePanel.add(updateSubmitBtn);
+        panel.add(new JLabel("User Email:"));
+        panel.add(updateIdField);
+        panel.add(new JLabel("New Name:"));
+        panel.add(updateNameField);
+        panel.add(new JLabel("New Email:"));
+        panel.add(updateEmailField);
+        panel.add(new JLabel());
+        panel.add(updateSubmitBtn);
 
-        updateSubmitBtn.addActionListener(e -> {
-            String oldEmail = updateIdField.getText();
-            String newName = updateNameField.getText();
-            String newEmail = updateEmailField.getText();
-            
-            if (users.containsKey(oldEmail)) {
-                User user = users.get(oldEmail);
-                user.setName(newName);
-                if (!oldEmail.equals(newEmail)) {
-                    users.remove(oldEmail);
-                    user.setEmail(newEmail);
-                    users.put(newEmail, user);
-                }
-                JOptionPane.showMessageDialog(this, "User updated successfully");
-                clearUpdateFields();
-            } else {
-                JOptionPane.showMessageDialog(this, "User not found");
-            }
-        });
+        updateSubmitBtn.addActionListener(e -> updateUser());
+        
+        return panel;
     }
 
-    private void createDeletePanel() {
-        deletePanel = new JPanel(new GridLayout(2, 2, 10, 10));
+    private JPanel createDeletePanel() {
+        JPanel panel = new JPanel(new GridLayout(2, 2, 10, 10));
         deleteIdField = new JTextField();
         deleteSubmitBtn = new JButton("Delete");
 
-        deletePanel.add(new JLabel("User Email:"));
-        deletePanel.add(deleteIdField);
-        deletePanel.add(new JLabel());
-        deletePanel.add(deleteSubmitBtn);
+        panel.add(new JLabel("User Email:"));
+        panel.add(deleteIdField);
+        panel.add(new JLabel());
+        panel.add(deleteSubmitBtn);
 
-        deleteSubmitBtn.addActionListener(e -> {
-            String email = deleteIdField.getText();
-            if (users.containsKey(email)) {
-                users.remove(email);
-                JOptionPane.showMessageDialog(this, "User deleted successfully");
-                deleteIdField.setText("");
-            } else {
-                JOptionPane.showMessageDialog(this, "User not found");
-            }
-        });
+        deleteSubmitBtn.addActionListener(e -> deleteUser());
+        
+        return panel;
     }
 
-    private void createRolePanel() {
-        rolePanel = new JPanel(new GridLayout(3, 2, 10, 10));
+    private JPanel createRolePanel() {
+        JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
         roleIdField = new JTextField();
         String[] roles = {"Admin", "Manager", "Staff"};
         roleCombo = new JComboBox<>(roles);
         roleSubmitBtn = new JButton("Assign Role");
 
-        rolePanel.add(new JLabel("User Email:"));
-        rolePanel.add(roleIdField);
-        rolePanel.add(new JLabel("New Role:"));
-        rolePanel.add(roleCombo);
-        rolePanel.add(new JLabel());
-        rolePanel.add(roleSubmitBtn);
+        panel.add(new JLabel("User Email:"));
+        panel.add(roleIdField);
+        panel.add(new JLabel("New Role:"));
+        panel.add(roleCombo);
+        panel.add(new JLabel());
+        panel.add(roleSubmitBtn);
 
-        roleSubmitBtn.addActionListener(e -> {
-            String email = roleIdField.getText();
-            String newRole = (String) roleCombo.getSelectedItem();
-            
-            if (users.containsKey(email)) {
-                users.get(email).setRole(newRole);
-                JOptionPane.showMessageDialog(this, "Role assigned successfully");
-                roleIdField.setText("");
-            } else {
-                JOptionPane.showMessageDialog(this, "User not found");
+        roleSubmitBtn.addActionListener(e -> assignRole());
+        
+        return panel;
+    }
+
+    private void registerUser() {
+        String name = regNameField.getText();
+        String email = regEmailField.getText();
+        String password = new String(regPasswordField.getPassword());
+        String role = (String) regRoleCombo.getSelectedItem();
+        
+        if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill all fields");
+            return;
+        }
+        
+        if (!users.containsKey(email)) {
+            users.put(email, new User(name, email, password, role));
+            JOptionPane.showMessageDialog(this, "User registered successfully");
+            clearRegisterFields();
+            saveUserData();
+        } else {
+            JOptionPane.showMessageDialog(this, "Email already exists");
+        }
+    }
+
+    private void updateUser() {
+        String oldEmail = updateIdField.getText();
+        String newName = updateNameField.getText();
+        String newEmail = updateEmailField.getText();
+        
+        if (users.containsKey(oldEmail)) {
+            User user = users.get(oldEmail);
+            user.setName(newName);
+            if (!oldEmail.equals(newEmail)) {
+                users.remove(oldEmail);
+                user.setEmail(newEmail);
+                users.put(newEmail, user);
             }
-        });
+            JOptionPane.showMessageDialog(this, "User updated successfully");
+            clearUpdateFields();
+            saveUserData();
+        } else {
+            JOptionPane.showMessageDialog(this, "User not found");
+        }
+    }
+
+    private void deleteUser() {
+        String email = deleteIdField.getText();
+        if (users.containsKey(email)) {
+            users.remove(email);
+            JOptionPane.showMessageDialog(this, "User deleted successfully");
+            deleteIdField.setText("");
+            saveUserData();
+        } else {
+            JOptionPane.showMessageDialog(this, "User not found");
+        }
+    }
+
+    private void assignRole() {
+        String email = roleIdField.getText();
+        String newRole = (String) roleCombo.getSelectedItem();
+        
+        if (users.containsKey(email)) {
+            users.get(email).setRole(newRole);
+            JOptionPane.showMessageDialog(this, "Role assigned successfully");
+            roleIdField.setText("");
+            saveUserData();
+        } else {
+            JOptionPane.showMessageDialog(this, "User not found");
+        }
     }
 
     private void clearRegisterFields() {
@@ -167,6 +206,31 @@ public class AccountManagementSystem extends JFrame {
         updateIdField.setText("");
         updateNameField.setText("");
         updateEmailField.setText("");
+    }
+
+    private void loadUserData() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(DATA_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                User user = User.fromString(line);
+                users.put(user.getEmail(), user);
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("No existing user data found. Starting fresh.");
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error loading user data: " + e.getMessage());
+        }
+    }
+
+    private void saveUserData() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(DATA_FILE))) {
+            for (User user : users.values()) {
+                writer.write(user.toString());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error saving user data: " + e.getMessage());
+        }
     }
 
     public static void main(String[] args) {
@@ -190,11 +254,28 @@ class User {
         this.role = role;
     }
 
+    @Override
+    public String toString() {
+        StringJoiner joiner = new StringJoiner("|");
+        joiner.add(name).add(email).add(password).add(role);
+        return joiner.toString();
+    }
+
+    public static User fromString(String str) {
+        String[] parts = str.split("\\|");
+        if (parts.length != 4) {
+            throw new IllegalArgumentException("Invalid user data format");
+        }
+        return new User(parts[0], parts[1], parts[2], parts[3]);
+    }
+
     public String getName() { return name; }
     public String getEmail() { return email; }
+    public String getPassword() { return password; }
     public String getRole() { return role; }
 
     public void setName(String name) { this.name = name; }
     public void setEmail(String email) { this.email = email; }
+    public void setPassword(String password) { this.password = password; }
     public void setRole(String role) { this.role = role; }
 }
