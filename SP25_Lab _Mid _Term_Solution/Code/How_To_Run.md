@@ -1,4 +1,4 @@
-1st Step : go to code folder using cd in terminal.
+1st Step : go to code folder using cd (change directory)in terminal.
 
 2nd step : Write javac AuctionApplication.java
 

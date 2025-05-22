@@ -1,9 +1,13 @@
 import java.awt.*;
+import java.awt.event.ActionListener; // Added for event handling
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
+
+// Information Expert: This class holds all information about an item and handles its own bidding logic
 
 class AuctionItem {
     private String id;
@@ -41,6 +45,7 @@ class AuctionItem {
     }
 }
 
+// Creator: Responsible for creating and managing AuctionItem objects
 class AuctionBackend {
     private List<AuctionItem> items;
     private Map<String, AuctionItem> itemMap;
@@ -77,13 +82,12 @@ class AuctionBackend {
     }
 }
 
+// Controller: Intermediary between the frontend and backend
 class AuctionController {
     private AuctionBackend backend;
-    private AuctionGUI gui;
 
-    public AuctionController(AuctionBackend backend, AuctionGUI gui) {
+    public AuctionController(AuctionBackend backend) {
         this.backend = backend;
-        this.gui = gui;
     }
 
     public void addItem(String id, String name, String description) {
@@ -107,8 +111,9 @@ class AuctionController {
     }
 }
 
-class AuctionGUISingleton {
-    private static AuctionGUISingleton instance;
+// Singleton: Ensure only one instance of GUI JFrame exists
+class AuctionGUI {
+    private static AuctionGUI instance;
     private JFrame frame;
     private AuctionController controller;
     private JTextArea adminDisplay;
@@ -117,14 +122,14 @@ class AuctionGUISingleton {
     private JTextField bidAmountField;
     private JTextField bidderNameField;
 
-    private AuctionGUISingleton() {
-        controller = new AuctionController(new AuctionBackend(), this);
+    private AuctionGUI() {
+        controller = new AuctionController(new AuctionBackend());
         initialize();
     }
 
-    public static AuctionGUISingleton getInstance() {
+    public static AuctionGUI getInstance() {
         if (instance == null) {
-            instance = new AuctionGUISingleton();
+            instance = new AuctionGUI();
         }
         return instance;
     }
@@ -148,7 +153,7 @@ class AuctionGUISingleton {
 
         tabbedPane.addTab("Admin Panel", adminPanel);
         tabbedPane.addTab("User Panel", userPanel);
-        
+
         frame.add(tabbedPane, BorderLayout.CENTER);
         frame.add(new JLabel(" Ready", JLabel.LEFT), BorderLayout.SOUTH);
         frame.setLocationRelativeTo(null);
@@ -241,24 +246,24 @@ class AuctionGUISingleton {
     private void showAddItemDialog() {
         JDialog dialog = new JDialog(frame, "Add New Item", true);
         dialog.setLayout(new GridLayout(4, 2, 10, 10));
-        
+
         JTextField idField = new JTextField();
         JTextField nameField = new JTextField();
         JTextField descField = new JTextField();
-        
+
         dialog.add(new JLabel("Item ID:"));
         dialog.add(idField);
         dialog.add(new JLabel("Item Name:"));
         dialog.add(nameField);
         dialog.add(new JLabel("Description:"));
         dialog.add(descField);
-        
+
         dialog.add(createButton("Add", e -> {
             controller.addItem(idField.getText(), nameField.getText(), descField.getText());
             refreshItemSelector();
             dialog.dispose();
         }));
-        
+
         dialog.add(createButton("Cancel", e -> dialog.dispose()));
         dialog.setSize(400, 200);
         dialog.setLocationRelativeTo(frame);
@@ -270,7 +275,7 @@ class AuctionGUISingleton {
             double amount = Double.parseDouble(bidAmountField.getText());
             String bidderName = bidderNameField.getText();
             String selected = (String) itemSelector.getSelectedItem();
-            
+
             if (selected != null && !bidderName.isEmpty()) {
                 String itemId = selected.split(" - ")[0];
                 if (controller.placeBid(itemId, amount, bidderName)) {
@@ -294,6 +299,6 @@ class AuctionGUISingleton {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> AuctionGUISingleton.getInstance());
+        SwingUtilities.invokeLater(() -> AuctionGUI.getInstance());
     }
 }
