@@ -1,4 +1,4 @@
-package Patterns.Singleton;
+package Patterns;
 
 // we create only one instnce of this stack class
 
